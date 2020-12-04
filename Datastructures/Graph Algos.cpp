@@ -1,178 +1,103 @@
 #include <iostream>
 #include <bits/stdc++.h>
+#include <list>
+
 using namespace std;
 
-class graph{
+class Graph{
+    int v;
+    list<int> * adjList;
     public:
-        int v;
-        unordered_map<int, vector<int>> adjList;
+    Graph(int v){
+        this->v = v;
+        adjList = new list<int>[v];
+    }
 
-        graph(int v){
-            this->v = v;
-        }
-        void addEdge(int x, int y, bool bidir){
-            adjList[x].push_back(y);
-            if(bidir){
-                adjList[y].push_back(x);
-            }
-        } 
+    void addEdge(int u, int v){
+        adjList[u].push_back(v);
+    }
 
-        void dfs_helper(int src, bool *visited){
-            cout << src <<" ";
-            visited[src] = true;
-            for(auto element: adjList[src]){
-                if(!visited[element])
-                    dfs_helper(element, visited);
-            }
-        }
-        void dfs(int src){
-            bool *visited = new bool[v];
-            for(int i=0;i<v;i++){
-                visited[i] = false;
-            }
-
-            dfs_helper(src, visited);
-            cout <<endl;
+    void topologicalSortBFS(){
+        int *indegree = new int[v];
+        
+        for(int i=0;i<v;i++){
+            indegree[i] = 0;
         }
 
-        void bfs(int src){
-            bool *visited = new bool[v];
-            for(int i=0;i<v;i++){
-                visited[i] = false;
+        for(int i=0;i<v;i++){
+            for(auto nbr:adjList[i]){
+                indegree[nbr]++;
             }
-            
-            queue<int> q;
-            q.push(src);
-            visited[src] = true;
-            while(!q.empty()){
-                int element = q.front();
-                q.pop();
-                cout << element<<" ";
+        }
 
-                for(auto i: adjList[element]){
-                    if(!visited[i]){
-                        q.push(i);
-                        visited[i] = true;
-                    }
+        queue<int> q;
+        for(int i=0;i<v;i++){
+            if(indegree[i]==0){
+                q.push(i);
+            }
+        }
+        cout <<"TopologicalSort BFS : ";
+        while(!q.empty()){
+            int node = q.front();
+            cout << node<<" ";
+            q.pop();
+            for(auto nbr:adjList[node]){
+                indegree[nbr]--;
+                if(indegree[nbr]==0){
+                    q.push(nbr);
                 }
             }
-            cout << endl;
         }
+    }
 
-        bool dfs_helper_cycle(int src, bool *visited){
-           
-            visited[src] = true;
-            for(auto element: adjList[src]){
-                
-                if(!visited[element])
-                    dfs_helper(element, visited);
-                else
-                    return true;
-            }
-            return false;
-        }
-        void undirected_cycle(){
-            int src = 0;
-            bool *visited = new bool[v];
-            for(int i=0;i<v;i++){
-                visited[i] = false;
-            }
+    void dfs_helper(int src, bool *visited, list<int>&ordering){
+		visited[src] = true;
+		
+		for(auto nbrs:adjList[src]){
+			if(!visited[nbrs]){
+				dfs_helper(nbrs, visited, ordering);
+			}
+		}
+		
+		ordering.push_front(src);
+		
+	}
+	
+	void topologicalSortDFS(){
+		bool *visited = new bool[v];
+		list<int> ordering;
+		
+		for(int i=0;i<v;i++){
+			visited[i] =  false;
+		}
+		
+		for(int i=0;i<v;i++){
+			if(!visited[i]){
+				dfs_helper(i, visited, ordering);
+			}
+		}
+		cout <<"TopologicalSort DFS : ";
+		for(auto i:ordering){
+			cout << i<<" ";
+		}
+	}
 
-            bool result = dfs_helper_cycle(src, visited);
+    void topologicalSortBFS
 
-            if(result)
-                cout <<"Cycle exist" <<endl;
-            else
-                cout <<"No cycle exist" <<endl;
-
-        }
-        //0 -not visited, 1- visited and in current stack, 2- visited but not in cureent stack
-        bool directed_cyle_dfs(int src, int  *visited){
-            visited[src] = 1;
-
-            for(auto element : adjList[src]){
-                if(visited[element] == 1){
-                    return true;
-                }
-                bool cycle_mila = directed_cyle_dfs(element, visited);
-                if(cycle_mila)
-                    return true;
-                
-            }
-
-            visited[src] = 2;
-            return false;
-        }
-        void directed_cycle_detect(){
-            int src = 0;
-            int *visited = new int[v];
-            for(int i=0;i<v;i++){
-                visited[i] = 0;
-            }
-
-            bool result = directed_cyle_dfs(src, visited);
-
-            if(result)
-                cout <<"Cycle exist" <<endl;
-            else
-                cout <<"No cycle exist" <<endl;
-
-        }
-        void dfs_helper_topological(int src, bool *visited, list<int> &ordering){
-            visited[src] = true;
-            for(auto element: adjList[src]){
-                if(!visited[element])
-                    dfs_helper_topological(element, visited, ordering);
-            }
-            ordering.push_front(src);
-        }
-        void topological_sort(){
-            bool *visited = new bool[v];
-            for(int i=0;i<v;i++){
-                visited[i] = false;
-            }
-            list<int> ordering;
-            
-            for(int i=0;i<v;i++){
-                if(!visited[i]){
-                    dfs_helper_topological(i, visited, ordering);
-                }
-            }
-            cout << "Topological Sort:- ";
-            for(auto i: ordering){
-                cout << i << " ";
-            }
-            cout <<endl;
-        }
 };
+
+using namespace std;
 int main() {
-    /*
-    graph g(6);
-    g.addEdge(0, 1, false);
-    g.addEdge(1,2, false);
-    g.addEdge(2,3, false);
-    //g.addEdge(3,0, true);
-    g.addEdge(3,4, false);
-    //g.addEdge(4,2, false);
+    Graph g(6);
 
-    cout << "DFS of graph is :- ";
-    g.dfs(0);
+    g.addEdge(5, 2); 
+    g.addEdge(5, 0); 
+    g.addEdge(4, 0); 
+    g.addEdge(4, 1); 
+    g.addEdge(2, 3); 
+    g.addEdge(3, 1);
 
-    cout << "BFS of graph is :- ";
-    g.bfs(0);
-    */
-    //g.undirected_cycle();
-    //g.directed_cycle_detect();
-
-    
-
-    graph g(6);
-    g.addEdge(5, 0, false);
-    g.addEdge(4, 0, false);
-    g.addEdge(5, 2, false);
-    g.addEdge(4, 1, false);
-    g.addEdge(2, 3, false);
-    g.addEdge(3, 1, false);
-
-    g.topological_sort();
+    //g.topologicalSortBFS();
+    cout <<endl;
+    g.topologicalSortDFS();
 }
